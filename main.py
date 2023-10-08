@@ -3,12 +3,11 @@ import game
 
 pygame.init()
 
-screen_width = 640
-screen_height = 480
+screen_width = 550
+screen_height = 550
 screen = pygame.display.set_mode((screen_width, screen_height))
 
 pygame.display.set_caption("Pacman simulation")
-font = pygame.font.SysFont("Verdana", 15)
 pygame.time.Clock().tick(60)
 
-game.Game().Start(screen)
+game.Game(screen_width,screen_height).Start(screen)
