@@ -38,12 +38,18 @@ class Map:
                 if(self.matrix[x,y]==0):
                     self.scoreWin += 1
 
+    def XSizeCell(self):
+        return self.width/25
+    
+    def YSizeCell(self):
+        return self.height/25
+
     def Display(self, screen):
         for x in range(25):
             for y in range(25):
                 if(self.matrix[y, x] == 1):
-                    pygame.draw.rect(screen, (64, 128, 255), (self.width/25*(x), self.height/25*(y), self.width/25-1, self.height/25-1))
+                    pygame.draw.rect(screen, (64, 128, 255), (self.XSizeCell()*x+0.5, self.YSizeCell()*y+0.5, self.XSizeCell()-0.5, self.YSizeCell()-0.5))
                 elif(self.matrix[y, x] == 2):
-                    pygame.draw.rect(screen, (0, 0, 0), (self.width/25*(x), self.height/25*(y), self.width/25, self.height/25))
+                    pygame.draw.rect(screen, (0, 0, 0), (self.XSizeCell()*x, self.YSizeCell()*y, self.XSizeCell(), self.YSizeCell()))
                 elif(self.matrix[y, x] == 0):
-                    pygame.draw.circle(screen, (255, 0, 255), (self.width/25*(x+0.5), self.height/25*(y+0.5)), 1)
+                    pygame.draw.circle(screen, (255, 0, 255), (self.XSizeCell()*(x+0.5), self.YSizeCell()*(y+0.5)), 1)
