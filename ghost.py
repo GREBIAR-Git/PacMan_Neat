@@ -4,6 +4,7 @@ import math
 import random
 import time
 
+
 from threading import Thread
 
 class Ghost:
@@ -18,28 +19,82 @@ class Ghost:
         self.isHome = True
         self.state = 0
         self.t1 = Thread(target=self.ChangeState)
+        
         self.t1.start()
+        self.goInHome = False
+        self.prevState = -1
+
+    def Turn(self):
+        if(self.direction=="LEFT"):
+            self.direction = "RIGHT"
+        elif(self.direction=="RIGHT"):
+            self.direction = "LEFT"
+        elif(self.direction=="TOP"):
+            self.direction = "BOT"
+        else:
+            self.direction = "TOP"
 
     def Action(self, pm, map):
         if(self.state == 0):
             self.Scatter(map)
         elif(self.state == 1):
             self.Chase(pm, map)
+        elif(self.state == 4):
+            self.State4(map)
+        else: 
+            self.Frightened(map)
+
+    def State4(self, map):
+        if(not self.goInHome):
+            self.GoInHome(map)
+        else:
+            x1 = int((self.x+10)/(map.XSizeCell()))
+            y1 = int((self.y)/(map.YSizeCell())) 
+            if(x1 == 12 and y1 == 12):
+                self.goInHome = False
+                self.state = self.prevState
+                self.isHome = True
+            else:
+                self.y+=self.step
+                if(self.y < (0-self.radius)):
+                    self.y = map.height
+
+    def GoInHome(self, map):
+        x1 = int((self.x+10)/(map.XSizeCell()))
+        y1 = int((self.y)/(map.YSizeCell())) 
+        if(x1 == 12 and y1 == 9):
+            self.goInHome = True
+        else:
+            self.GoTo(13*map.XSizeCell(),9*map.YSizeCell(),map)
 
     def ChangeState(self):
         time.sleep(7)
+        while(self.state==2 or self.state==4):
+            time.sleep(1)
         self.state = 1
         time.sleep(20)
+        while(self.state==2 or self.state==4):
+            time.sleep(1)
         self.state = 0
         time.sleep(7)
+        while(self.state==2 or self.state==4):
+            time.sleep(1)
         self.state = 1 
         time.sleep(20)
+        while(self.state==2 or self.state==4):
+            time.sleep(1)
         self.state = 0
         time.sleep(5)
+        while(self.state==2 or self.state==4):
+            time.sleep(1)
         self.state = 1 
         time.sleep(20)
+        while(self.state==2 or self.state==4):
+            time.sleep(1)
         self.state = 0
         time.sleep(5)
+        while(self.state==2 or self.state==4):
+            time.sleep(1)
         self.state = 1
 
 
@@ -177,7 +232,6 @@ class Ghost:
                 xLeft = self.EuclideanDistances(self.x-map.XSizeCell(),xPM,self.y,yPM)
             if(self.Test("RIGHT", map)):
                 xRight = self.EuclideanDistances(self.x+map.XSizeCell(),xPM,self.y,yPM)
-            
             if(yBot<xLeft and yBot<xRight):
                 self.direction = "BOT"
             elif(xLeft<yBot and xLeft<xRight):
@@ -226,7 +280,7 @@ class Ghost:
             if(x1>=25 or Map.matrix[y1-1, x1] == 1 or x2>=25 or Map.matrix[y1-1, x2] == 1 or x3>=25 or Map.matrix[y1-1, x3] == 1):
                 return False
             else:
-                if(Map.matrix[y1, x1] == 3 or Map.matrix[y1, x1] == 0):
+                if(Map.matrix[y1, x1] == 3 or Map.matrix[y1, x1] == 0 or Map.matrix[y1, x1] == 6):
                     return True
         elif (direction == "BOT"):
             x1 = int((self.x)/(Map.XSizeCell()))
@@ -236,7 +290,7 @@ class Ghost:
             if(y1+1<25 and (x1>=25 or Map.matrix[y1+1, x1] == 1 or x2>=25 or Map.matrix[y1+1, x2] == 1 or x3>=25 or Map.matrix[y1+1, x3] == 1)):
                 return False
             else:
-                if(Map.matrix[y1, x1] == 3 or Map.matrix[y1, x1] == 0):
+                if(Map.matrix[y1, x1] == 3 or Map.matrix[y1, x1] == 0 or Map.matrix[y1, x1] == 6):
                     return True
         elif (direction == "RIGHT"):
             x1 = int((self.x-size)/(Map.XSizeCell())) 
@@ -246,7 +300,7 @@ class Ghost:
             if(x1+1<25 and (Map.matrix[y1, x1+1] == 1 or Map.matrix[y2, x1+1] == 1 or Map.matrix[y3, x1+1] == 1)):
                 return False
             else:
-                if(x1+1<25 and (Map.matrix[y1, x1] == 3 or Map.matrix[y1, x1] == 0)):
+                if(x1+1<25 and (Map.matrix[y1, x1] == 3 or Map.matrix[y1, x1] == 0 or Map.matrix[y1, x1] == 6)):
                     return True
         elif (direction == "LEFT"):
             x1 = int((self.x+size)/(Map.XSizeCell())) 
@@ -256,7 +310,7 @@ class Ghost:
             if(Map.matrix[y1, x1-1] == 1 or Map.matrix[y2, x1-1] == 1 or Map.matrix[y3, x1-1] == 1):
                 return False
             else:
-                if(x1<25 and ( Map.matrix[y1, x1] == 3 or Map.matrix[y1, x1] == 0)):
+                if(x1<25 and ( Map.matrix[y1, x1] == 3 or Map.matrix[y1, x1] == 0 or Map.matrix[y1, x1] == 6)):
                     return True
         return False
 
@@ -293,4 +347,11 @@ class Ghost:
         return False
 
     def Display(self, screen):
-        pygame.draw.circle(screen, self.color, (self.x, self.y), self.radius)
+        if(self.state==2):
+            pygame.draw.circle(screen, (0,0,255), (self.x, self.y), self.radius)
+        elif(self.state==4):
+            pygame.draw.circle(screen, self.color, (self.x, self.y), self.radius)
+            pygame.draw.circle(screen, (0,0,0), (self.x, self.y), self.radius-2)
+        else:
+            pygame.draw.circle(screen, self.color, (self.x, self.y), self.radius)
+
