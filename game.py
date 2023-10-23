@@ -5,6 +5,8 @@ import redGhost
 import blueGhost
 import pinkGhost
 import orangeGhost
+import sys
+#from pygame import quit
 
 class Game:
     def __init__(self, width, height):
@@ -67,7 +69,7 @@ class Game:
             if event.type == pygame.QUIT:
                 self.pacMan.isAlive = False
                 pygame.quit()
-                quit()
+                sys.exit()
             if event.type == pygame.KEYDOWN:
                 if(event.key == 119 or event.key == 1073741906):
                     self.direction = "TOP"

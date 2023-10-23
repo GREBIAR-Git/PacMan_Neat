@@ -15,6 +15,8 @@ class Ghost:
         self.radius = 10
         self.direction = "RIGHT"
         self.step = step
+        self.slowStep = step - 0.1
+        self.fastStep = step + 0.1
         self.one = False
         self.isHome = True
         self.state = 0
@@ -44,6 +46,14 @@ class Ghost:
         else: 
             self.Frightened(map)
 
+    def Step(self):
+        if(self.state == 2):
+            return self.slowStep
+        elif(self.state == 4):
+            return self.fastStep
+        else:
+            return self.step
+
     def State4(self, map):
         if(not self.goInHome):
             self.GoInHome(map)
@@ -55,7 +65,7 @@ class Ghost:
                 self.state = self.prevState
                 self.isHome = True
             else:
-                self.y+=self.step
+                self.y += self.Step()
                 if(self.y < (0-self.radius)):
                     self.y = map.height
 
@@ -106,7 +116,7 @@ class Ghost:
         x1 = int((self.x)/(map.XSizeCell()))
         y1 = int((self.y+size)/(map.YSizeCell())) 
         if(self.isHome and (map.matrix[y1, x1] == 1 or map.matrix[y1, x1] == 2)):
-            self.y-=self.step
+            self.y -= self.Step()
             if(self.y < (0-self.radius)):
                 self.y = map.height
         else:
@@ -115,19 +125,19 @@ class Ghost:
 
     def GoInDirection(self, map):
         if(self.direction == "TOP"):
-            self.y-=self.step
+            self.y -= self.Step()
             if(self.y < (0-self.radius)):
                 self.y = map.height
         elif (self.direction == "RIGHT"):
-            self.x+=self.step
+            self.x += self.Step()
             if(self.x > (map.width+self.radius)):
                 self.x = 0
         elif (self.direction == "BOT"):
-            self.y+=self.step
+            self.y += self.Step()
             if(self.y > (map.height+self.radius)):
                 self.y = 0
         elif (self.direction == "LEFT"):
-            self.x-=self.step
+            self.x -= self.Step()
             if(self.x < (0-self.radius)):
                 self.x = map.width
 

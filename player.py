@@ -32,7 +32,7 @@ class PacMan:
             self.big = False
 
     def EndFrightened(self,ghost):
-        if(not ghost.prevState==4 and not ghost.prevState==2):
+        if(not ghost.prevState==4 and not ghost.prevState==2 and not ghost.state == 4):
             ghost.state = ghost.prevState
             return True
         return False
