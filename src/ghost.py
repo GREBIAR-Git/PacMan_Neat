@@ -8,23 +8,40 @@ import time
 from threading import Thread
 
 class Ghost:
-    def __init__(self, x, y, color, step = 0.3):   
+    def __init__(self, x, y, color, step = 2):   
         self.x = x
         self.y = y
         self.color = color
         self.radius = 10
         self.direction = "RIGHT"
         self.step = step
-        self.slowStep = step - 0.1
-        self.fastStep = step + 0.1
-        self.one = False
+        self.slowStep = step 
+        self.fastStep = step
         self.isHome = True
         self.state = 0
+        speed = 25
+        self.TScatter = 7/speed# 7 #1 # 7
+        self.TChase = 20/speed#20 #3 # 20
+        self.TScatter2 =2/speed# 2#0.5 # 2
+        self.W =1/speed# 2#0.5 # 2
+
         self.t1 = Thread(target=self.ChangeState)
         
         self.t1.start()
         self.goInHome = False
         self.prevState = -1
+    
+    def LocalCoordinates(self, map):
+        v = []
+        if(not self.isHome and not self.goInHome):
+            x = int((self.x)/(map.XSizeCell())) 
+            y = int((self.y)/(map.YSizeCell()))
+            v.append(x)
+            v.append(y)
+        else:
+            v.append(-1)
+            v.append(-1)
+        return v
 
     def Turn(self):
         if(self.direction=="LEFT"):
@@ -58,7 +75,7 @@ class Ghost:
         if(not self.goInHome):
             self.GoInHome(map)
         else:
-            x1 = int((self.x+10)/(map.XSizeCell()))
+            x1 = int((self.x)/(map.XSizeCell()))
             y1 = int((self.y)/(map.YSizeCell())) 
             if(x1 == 12 and y1 == 12):
                 self.goInHome = False
@@ -66,11 +83,9 @@ class Ghost:
                 self.isHome = True
             else:
                 self.y += self.Step()
-                if(self.y < (0-self.radius)):
-                    self.y = map.height
 
     def GoInHome(self, map):
-        x1 = int((self.x+10)/(map.XSizeCell()))
+        x1 = int((self.x)/(map.XSizeCell()))
         y1 = int((self.y)/(map.YSizeCell())) 
         if(x1 == 12 and y1 == 9):
             self.goInHome = True
@@ -78,33 +93,33 @@ class Ghost:
             self.GoTo(13*map.XSizeCell(),9*map.YSizeCell(),map)
 
     def ChangeState(self):
-        time.sleep(7)
+        time.sleep(self.TScatter)
         while(self.state==2 or self.state==4):
-            time.sleep(1)
+            time.sleep(self.W)
         self.state = 1
-        time.sleep(20)
+        time.sleep(self.TChase)
         while(self.state==2 or self.state==4):
-            time.sleep(1)
+            time.sleep(self.W)
         self.state = 0
-        time.sleep(7)
+        time.sleep(self.TScatter)
         while(self.state==2 or self.state==4):
-            time.sleep(1)
+            time.sleep(self.W)
         self.state = 1 
-        time.sleep(20)
+        time.sleep(self.TChase)
         while(self.state==2 or self.state==4):
-            time.sleep(1)
+            time.sleep(self.W)
         self.state = 0
-        time.sleep(5)
+        time.sleep(self.TScatter - self.TScatter2)
         while(self.state==2 or self.state==4):
-            time.sleep(1)
+            time.sleep(self.W)
         self.state = 1 
-        time.sleep(20)
+        time.sleep(self.TChase)
         while(self.state==2 or self.state==4):
-            time.sleep(1)
+            time.sleep(self.W)
         self.state = 0
-        time.sleep(5)
+        time.sleep(self.TScatter - self.TScatter2)
         while(self.state==2 or self.state==4):
-            time.sleep(1)
+            time.sleep(self.W)
         self.state = 1
 
 
@@ -112,45 +127,46 @@ class Ghost:
         return math.sqrt(math.pow(x2 - x1,2)+math.pow(y2 - y1,2))
 
     def ExitHome(self, map):
-        size = 10
         x1 = int((self.x)/(map.XSizeCell()))
-        y1 = int((self.y+size)/(map.YSizeCell())) 
+        y1 = int((self.y)/(map.YSizeCell())) 
         if(self.isHome and (map.matrix[y1, x1] == 1 or map.matrix[y1, x1] == 2)):
             self.y -= self.Step()
-            if(self.y < (0-self.radius)):
-                self.y = map.height
         else:
             self.direction = "LEFT"
             self.isHome = False
 
     def GoInDirection(self, map):
         if(self.direction == "TOP"):
-            self.y -= self.Step()
-            if(self.y < (0-self.radius)):
-                self.y = map.height
+            if(self.CanPass(self.direction,map)):
+                self.y -= self.Step()
+            # if(self.y < (0-self.radius)):
+            #     self.y = map.height
         elif (self.direction == "RIGHT"):
-            self.x += self.Step()
-            if(self.x > (map.width+self.radius)):
-                self.x = 0
+            if(self.CanPass(self.direction,map)):
+                self.x += self.Step()
+            # if(self.x > (map.width+self.radius)):
+            #     self.x = 0
         elif (self.direction == "BOT"):
-            self.y += self.Step()
-            if(self.y > (map.height+self.radius)):
-                self.y = 0
+            if(self.CanPass(self.direction,map)):
+                self.y += self.Step()
+            # if(self.y > (map.height+self.radius)):
+            #     self.y = 0
         elif (self.direction == "LEFT"):
-            self.x -= self.Step()
-            if(self.x < (0-self.radius)):
-                self.x = map.width
+            if(self.CanPass(self.direction,map)):
+                self.x -= self.Step()
+            # if(self.x < (0-self.radius)):
+            #     self.x = map.width
 
     def GoTo(self, x, y, map):
         if(self.isHome):
             self.ExitHome(map)
-        elif(self.CanPass(self.direction, map)): 
-            self.one = False
-            self.GoInDirection(map)
-        elif(self.one):
-            self.GoInDirection(map)
         else:
-            self.SelectDirection(x,y,map)
+            if(self.CanChangeDirection(self.direction, map)):
+                self.SelectDirection(x, y, map)
+                self.GoInDirection(map)
+            else:
+                if(self.CanPass(self.direction, map)): 
+                    self.GoInDirection(map)
 
     def Chase(self, pm, map):
         self.GoTo(pm.x, pm.y, map)
@@ -161,71 +177,77 @@ class Ghost:
     def Frightened(self, map):
         if(self.isHome):
             self.ExitHome(map)
-        elif(self.CanPass(self.direction, map)): 
-            self.one = False
-            self.GoInDirection(map)
-        elif(self.one):
-            self.GoInDirection(map)
         else:
-            self.RandomSelectDirection(map)
+            if(self.CanChangeDirection(self.direction, map)):
+                self.RandomSelectDirection(map)
+                self.GoInDirection(map)
+            else:
+                if(self.CanPass(self.direction, map)): 
+                    self.GoInDirection(map)
 
 
     def RandomSelectDirection(self, map):
-        self.one = True
         directionList = []
         
         if(self.direction == "TOP"):
-            if(self.Test("TOP", map)):
+            if(self.CanPass("TOP", map)):
                 directionList.append("TOP")
-            if(self.Test("LEFT", map)):
+            if(self.CanPass("LEFT", map)):
                 directionList.append("LEFT")
-            if(self.Test("RIGHT", map)):
+            if(self.CanPass("RIGHT", map)):
                 directionList.append("RIGHT")
+            # if(len(directionList)==0):
+            #     directionList.append("BOT")
             direction = random.randint(1, len(directionList))
             self.direction = directionList[direction-1]
 
         elif(self.direction == "BOT"):
-            if(self.Test("BOT", map)):
+            if(self.CanPass("BOT", map)):
                 directionList.append("BOT")
-            if(self.Test("LEFT", map)):
+            if(self.CanPass("LEFT", map)):
                 directionList.append("LEFT")
-            if(self.Test("RIGHT", map)):
+            if(self.CanPass("RIGHT", map)):
                 directionList.append("RIGHT")
+            # if(len(directionList)==0):
+            #     directionList.append("TOP")
             direction = random.randint(1, len(directionList))
             self.direction = directionList[direction-1]
 
         elif(self.direction == "RIGHT"):  
-            if(self.Test("TOP", map)):
+            if(self.CanPass("TOP", map)):
                 directionList.append("TOP")
-            if(self.Test("BOT", map)):
+            if(self.CanPass("BOT", map)):
                 directionList.append("BOT")
-            if(self.Test("RIGHT", map)):
+            if(self.CanPass("RIGHT", map)):
                 directionList.append("RIGHT")
+            # if(len(directionList)==0):
+            #     directionList.append("LEFT")
             direction = random.randint(1, len(directionList))
             self.direction = directionList[direction-1]
 
         elif(self.direction == "LEFT"):   
-            if(self.Test("TOP", map)):
+            if(self.CanPass("TOP", map)):
                 directionList.append("TOP")
-            if(self.Test("BOT", map)):    
+            if(self.CanPass("BOT", map)):    
                 directionList.append("BOT")
-            if(self.Test("LEFT", map)):
+            if(self.CanPass("LEFT", map)):
                 directionList.append("LEFT")
+            # if(len(directionList)==0):
+            #     directionList.append("RIGHT")
             direction = random.randint(1, len(directionList))
             self.direction = directionList[direction-1]
 
     def SelectDirection(self, xPM, yPM, map):
-        self.one = True
         yBot = 1000
         yTop = 1000
         xLeft = 1000
         xRight = 1000
         if(self.direction == "TOP"):
-            if(self.Test("TOP", map)):
+            if(self.CanPass("TOP", map)):
                 yTop = self.EuclideanDistances(self.x,xPM,self.y-map.YSizeCell(),yPM)
-            if(self.Test("LEFT", map)):
+            if(self.CanPass("LEFT", map)):
                 xLeft = self.EuclideanDistances(self.x-map.XSizeCell(),xPM,self.y,yPM)
-            if(self.Test("RIGHT", map)):
+            if(self.CanPass("RIGHT", map)):
                 xRight = self.EuclideanDistances(self.x+map.XSizeCell(),xPM,self.y,yPM)
             
             if(yTop<xLeft and yTop<xRight):
@@ -236,11 +258,11 @@ class Ghost:
                 self.direction = "RIGHT"
 
         elif(self.direction == "BOT"):
-            if(self.Test("BOT", map)):
+            if(self.CanPass("BOT", map)):
                 yBot = self.EuclideanDistances(self.x,xPM,self.y+map.YSizeCell(),yPM)
-            if(self.Test("LEFT", map)):
+            if(self.CanPass("LEFT", map)):
                 xLeft = self.EuclideanDistances(self.x-map.XSizeCell(),xPM,self.y,yPM)
-            if(self.Test("RIGHT", map)):
+            if(self.CanPass("RIGHT", map)):
                 xRight = self.EuclideanDistances(self.x+map.XSizeCell(),xPM,self.y,yPM)
             if(yBot<xLeft and yBot<xRight):
                 self.direction = "BOT"
@@ -250,11 +272,11 @@ class Ghost:
                 self.direction = "RIGHT"
 
         elif(self.direction == "RIGHT"):  
-            if(self.Test("TOP", map)):
+            if(self.CanPass("TOP", map)):
                 yTop = self.EuclideanDistances(self.x,xPM,self.y-map.YSizeCell(),yPM)
-            if(self.Test("BOT", map)):
+            if(self.CanPass("BOT", map)):
                 yBot = self.EuclideanDistances(self.x,xPM,self.y+map.YSizeCell(),yPM)
-            if(self.Test("RIGHT", map)):
+            if(self.CanPass("RIGHT", map)):
                 xRight = self.EuclideanDistances(self.x+map.XSizeCell(),xPM,self.y,yPM)
             
             if(yTop<xRight and yTop<yBot):
@@ -265,11 +287,11 @@ class Ghost:
                 self.direction = "BOT"
 
         elif(self.direction == "LEFT"):   
-            if(self.Test("TOP", map)):
+            if(self.CanPass("TOP", map)):
                 yTop = self.EuclideanDistances(self.x,xPM,self.y-map.YSizeCell(),yPM)
-            if(self.Test("BOT", map)):    
+            if(self.CanPass("BOT", map)):    
                 yBot = self.EuclideanDistances(self.x,xPM,self.y+map.YSizeCell(),yPM)
-            if(self.Test("LEFT", map)):
+            if(self.CanPass("LEFT", map)):
                 xLeft = self.EuclideanDistances(self.x-map.XSizeCell(),xPM,self.y,yPM)
             
             if(yTop<xLeft and yTop<yBot):
@@ -281,79 +303,82 @@ class Ghost:
             
         
     def CanPass(self, direction, Map):
-        size = 10
+        #if(self.color == (255, 0, 0)):
+            #print("noX: " + str((self.x)/(Map.XSizeCell())) + "; int: " + str(int((self.x)/(Map.XSizeCell()))))
+            #rint("noY: " + str((self.y)/(Map.XSizeCell())) + "; int: " + str(int((self.y)/(Map.XSizeCell()))))
         if(direction == "TOP"):
             x1 = int((self.x)/(Map.XSizeCell()))
-            x2 = int((self.x+size)/(Map.XSizeCell())) 
-            x3 = int((self.x-size)/(Map.XSizeCell()))
-            y1 = int((self.y+size)/(Map.YSizeCell())) 
-            if(x1>=25 or Map.matrix[y1-1, x1] == 1 or x2>=25 or Map.matrix[y1-1, x2] == 1 or x3>=25 or Map.matrix[y1-1, x3] == 1):
+            y1 = int((self.y)/(Map.YSizeCell())) 
+            if(Map.matrix[y1-1, x1] == 1):
                 return False
             else:
-                if(Map.matrix[y1, x1] == 3 or Map.matrix[y1, x1] == 0 or Map.matrix[y1, x1] == 6):
-                    return True
+                #if(Map.matrix[y1, x1] == 3 or Map.matrix[y1, x1] == 0 or Map.matrix[y1, x1] == 6):
+                return True
         elif (direction == "BOT"):
             x1 = int((self.x)/(Map.XSizeCell()))
-            x2 = int((self.x+size)/(Map.XSizeCell())) 
-            x3 = int((self.x-size)/(Map.XSizeCell()))
-            y1 = int((self.y-size)/(Map.YSizeCell())) 
-            if(y1+1<25 and (x1>=25 or Map.matrix[y1+1, x1] == 1 or x2>=25 or Map.matrix[y1+1, x2] == 1 or x3>=25 or Map.matrix[y1+1, x3] == 1)):
+            y1 = int((self.y)/(Map.YSizeCell())) 
+            if(Map.matrix[y1+1, x1] == 1):
                 return False
             else:
-                if(Map.matrix[y1, x1] == 3 or Map.matrix[y1, x1] == 0 or Map.matrix[y1, x1] == 6):
-                    return True
+                #if(Map.matrix[y1, x1] == 3 or Map.matrix[y1, x1] == 0 or Map.matrix[y1, x1] == 6):
+                return True
         elif (direction == "RIGHT"):
-            x1 = int((self.x-size)/(Map.XSizeCell())) 
-            y2 = int((self.y+size)/(Map.YSizeCell())) 
-            y3 = int((self.y-size)/(Map.YSizeCell()))
+            x1 = int((self.x)/(Map.XSizeCell())) 
             y1 = int((self.y)/(Map.YSizeCell()))
-            if(x1+1<25 and (Map.matrix[y1, x1+1] == 1 or Map.matrix[y2, x1+1] == 1 or Map.matrix[y3, x1+1] == 1)):
+            if(Map.matrix[y1, x1+1] == 1):
                 return False
             else:
-                if(x1+1<25 and (Map.matrix[y1, x1] == 3 or Map.matrix[y1, x1] == 0 or Map.matrix[y1, x1] == 6)):
-                    return True
+                #if(x1+1<25 and (Map.matrix[y1, x1] == 3 or Map.matrix[y1, x1] == 0 or Map.matrix[y1, x1] == 6)):
+                return True
         elif (direction == "LEFT"):
-            x1 = int((self.x+size)/(Map.XSizeCell())) 
-            y2 = int((self.y+size)/(Map.YSizeCell())) 
-            y3 = int((self.y-size)/(Map.YSizeCell()))
+            x1 = int((self.x)/(Map.XSizeCell())) 
             y1 = int((self.y)/(Map.YSizeCell()))
-            if(Map.matrix[y1, x1-1] == 1 or Map.matrix[y2, x1-1] == 1 or Map.matrix[y3, x1-1] == 1):
+            if(Map.matrix[y1, x1-1] == 1):
                 return False
             else:
-                if(x1<25 and ( Map.matrix[y1, x1] == 3 or Map.matrix[y1, x1] == 0 or Map.matrix[y1, x1] == 6)):
-                    return True
+                #if(x1<25 and ( Map.matrix[y1, x1] == 3 or Map.matrix[y1, x1] == 0 or Map.matrix[y1, x1] == 6)):
+                return True
         return False
 
-    def Test(self, direction, map):
-        size = 10
+    def CanChangeDirection(self, direction, Map):
+        #if(self.color == (255, 0, 0)):
+            #print("noX: " + str((self.x)/(Map.XSizeCell())) + "; int: " + str(int((self.x)/(Map.XSizeCell()))))
+            #print("noY: " + str((self.y)/(Map.XSizeCell())) + "; int: " + str(int((self.y)/(Map.XSizeCell()))))
         if(direction == "TOP"):
-            x1 = int((self.x)/(map.XSizeCell()))
-            y1 = int((self.y+size)/(map.YSizeCell())) 
-            if(x1>=25 or map.matrix[y1-1, x1] == 1):
-                return False
-            else:
+            x1 = int((self.x)/(Map.XSizeCell()))
+            y1 = int((self.y)/(Map.YSizeCell())) 
+            if(Map.matrix[y1-1, x1] == 1 or Map.matrix[y1, x1] == 4 or Map.matrix[y1, x1] == 5):
                 return True
+            else:
+                #if(Map.matrix[y1, x1] == 3 or Map.matrix[y1, x1] == 0 or Map.matrix[y1, x1] == 6):
+                return False
         elif (direction == "BOT"):
-            x1 = int((self.x)/(map.XSizeCell()))
-            y1 = int((self.y-size)/(map.YSizeCell())) 
-            if(y1+1<25 and (x1>=25 or map.matrix[y1+1, x1] == 1)):
-                return False
-            else:
+            x1 = int((self.x)/(Map.XSizeCell()))
+            y1 = int((self.y)/(Map.YSizeCell())) 
+            if(Map.matrix[y1+1, x1] == 1 or Map.matrix[y1, x1] == 4 or Map.matrix[y1, x1] == 5):
+                self.one = True
                 return True
+            else:
+                #if(Map.matrix[y1, x1] == 3 or Map.matrix[y1, x1] == 0 or Map.matrix[y1, x1] == 6):
+                return False
         elif (direction == "RIGHT"):
-            x1 = int((self.x-size)/(map.XSizeCell())) 
-            y1 = int((self.y)/(map.YSizeCell()))
-            if(x1+1<25 and map.matrix[y1, x1+1] == 1):
-                return False
-            else:
+            x1 = int((self.x)/(Map.XSizeCell())) 
+            y1 = int((self.y)/(Map.YSizeCell()))
+            if((Map.matrix[y1, x1+1] == 1) or Map.matrix[y1, x1] == 4 or Map.matrix[y1, x1] == 5):
+                self.one = True
                 return True
+            else:
+                #if(x1+1<25 and (Map.matrix[y1, x1] == 3 or Map.matrix[y1, x1] == 0 or Map.matrix[y1, x1] == 6)):
+                return False
         elif (direction == "LEFT"):
-            x1 = int((self.x+size)/(map.XSizeCell())) 
-            y1 = int((self.y)/(map.YSizeCell()))
-            if(map.matrix[y1, x1-1] == 1):
-                return False
-            else:
+            x1 = int((self.x)/(Map.XSizeCell())) 
+            y1 = int((self.y)/(Map.YSizeCell()))
+            if(Map.matrix[y1, x1-1] == 1 or Map.matrix[y1, x1] == 4 or Map.matrix[y1, x1] == 5):
+                self.one = True
                 return True
+            else:
+                #if(x1<25 and ( Map.matrix[y1, x1] == 3 or Map.matrix[y1, x1] == 0 or Map.matrix[y1, x1] == 6)):
+                return False
         return False
 
     def Display(self, screen):
