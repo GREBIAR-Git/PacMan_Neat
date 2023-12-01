@@ -2,7 +2,8 @@ import app
 import neat
 import os
 import pickle
-CHECKPOINT = 766
+CHECKPOINT = 1
+isCheckpoint = False
 
 def population(checkpoint, config):
     if(checkpoint):
@@ -39,9 +40,12 @@ def openConfig():
 def general():
     run(openConfig())
 
-def replayWinGanome(c):
+def replayWinGanome():
     application = app.App()
     application.replay_genome(openConfig())
 
 if __name__ == "__main__":
-    general()
+    if(not isCheckpoint):
+        general()
+    else:
+        replayWinGanome()
