@@ -5,7 +5,8 @@ import pickle
 import time
 
 class App:
-    def __init__(self):
+    def __init__(self, data):
+        self.data = data
         self.generation = -1
         self.generationlp = -1
         self.screen_width = 550 
@@ -45,7 +46,7 @@ class App:
 
     def Run(self, game_end_callback, game_update_callback, eat):
         self.game.Restart(self.screen_width,self.screen_height)
-        self.game.Start(self.screen,game_end_callback, game_update_callback, eat)
+        self.game.Start(self.screen,game_end_callback, game_update_callback, eat, self.data)
 
 
     def RestartGame(self, gen_id):
@@ -130,7 +131,7 @@ class App:
                     self.game.pacMan.direction = "BOT"
 
     def replay_genome(self, config_path, genome_path="winner.pkl"):
-        config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, neat.DefaultStagnation, config_path)
+        config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet, neat.DefaultStagnation, "config-FeedForward.txt")
         with open(genome_path, "rb") as f:
             genome = pickle.load(f)
         genomes = [(10, genome)]

@@ -2,21 +2,20 @@ import app
 import neat
 import os
 import pickle
-CHECKPOINT = 1
-isCheckpoint = False
+import yaml
 
-def population(checkpoint, config):
+def population(checkpoint, config, data):
     if(checkpoint):
-        return neat.Checkpointer.restore_checkpoint('neat-checkpoint-%i' % CHECKPOINT)   
+        return neat.Checkpointer.restore_checkpoint('neat-checkpoint-%i' % data['CheckpointNumber'])   
     else:
         return neat.Population(config)
 
-def run(config_path):
+def run(data):
     config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
                                 neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                                config_path)
+                                "config-FeedForward.txt")
 
-    pop = population(False, config)
+    pop = population(data['LaunchCheckpoint'], config, data)
     
     reporter = neat.Checkpointer(True)
     reporter.generation = True
@@ -24,7 +23,7 @@ def run(config_path):
     pop.add_reporter(reporter)
     stats = neat.StatisticsReporter()
     pop.add_reporter(stats)
-    application = app.App()
+    application = app.App(data)
 
     winner = pop.run(application.EvalGenomes)
 
@@ -33,19 +32,15 @@ def run(config_path):
         pickle.dump(winner, f)
         f.close()
 
-def openConfig():
-    local_dir = os.path.dirname(__file__)
-    return os.path.join(local_dir, "..\\config-FeedForward.txt")
-
-def general():
-    run(openConfig())
-
-def replayWinGanome():
-    application = app.App()
-    application.replay_genome(openConfig())
 
 if __name__ == "__main__":
-    if(not isCheckpoint):
-        general()
+    from yaml import load
+
+    with open('config.yml', 'r') as f:
+        data = load(f, Loader=yaml.FullLoader)
+   
+    if(not data['LaunchWinningGenome']):
+        run(data)
     else:
-        replayWinGanome()
+        application = app.App(data)
+        application.replay_genome()

@@ -1,5 +1,5 @@
 import pygame
-import terrain
+import maps.terrain
 import math
 import random
 import time
@@ -19,7 +19,7 @@ class Ghost:
         self.fastStep = step
         self.isHome = True
         self.state = 0
-        speed = 25
+        speed=25
         self.TScatter = 7/speed# 7 #1 # 7
         self.TChase = 20/speed#20 #3 # 20
         self.TScatter2 =2/speed# 2#0.5 # 2

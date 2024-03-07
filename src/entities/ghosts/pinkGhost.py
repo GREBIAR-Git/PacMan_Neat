@@ -1,6 +1,6 @@
-import ghost
+from entities.ghosts.ghost import Ghost
 
-class GhostPink(ghost.Ghost):
+class GhostPink(Ghost):
     def Scatter(self, map):
         self.GoTo(0, 0, map)
     

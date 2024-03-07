@@ -1,10 +1,10 @@
 import pygame
-import player
-import terrain
-import redGhost
-import blueGhost
-import pinkGhost
-import orangeGhost
+from entities.player import PacMan
+from maps.terrain import Map
+from entities.ghosts.redGhost import GhostRed
+from entities.ghosts.blueGhost import GhostBlue
+from entities.ghosts.pinkGhost import GhostPink
+from entities.ghosts.orangeGhost import GhostOrange
 import sys
 import datetime
 
@@ -30,14 +30,14 @@ class Game:
     def Restart(self,width, height):
         self.rrr = True
         self.direction = ""
-        self.map = terrain.Map(width, height)
-        self.pacMan = player.PacMan(self.map.XSizeCell()*12.5,self.map.YSizeCell()*19.5,9,self.map)
-        self.goustRed = redGhost.GhostRed(self.map.XSizeCell()*11.5 ,self.map.YSizeCell()*12.5, (255, 0, 0), self.map.YSizeCell())
-        self.goustPink = pinkGhost.GhostPink(self.map.XSizeCell()*11.5,self.map.YSizeCell()*13.5, (255, 192, 203), self.map.YSizeCell())
-        self.goustBlue = blueGhost.GhostBlue(self.map.XSizeCell()*13.5,self.map.YSizeCell()*12.5, (0, 255, 255), self.map.YSizeCell())
-        self.goustOrange = orangeGhost.GhostOrange(self.map.XSizeCell()*13.5,self.map.YSizeCell()*13.5, (255, 165, 0), self.map.YSizeCell())
+        self.map = Map(width, height)
+        self.pacMan = PacMan(self.map.XSizeCell()*12.5,self.map.YSizeCell()*19.5,9,self.map)
+        self.goustRed = GhostRed(self.map.XSizeCell()*11.5 ,self.map.YSizeCell()*12.5, (255, 0, 0), self.map.YSizeCell())
+        self.goustPink = GhostPink(self.map.XSizeCell()*11.5,self.map.YSizeCell()*13.5, (255, 192, 203), self.map.YSizeCell())
+        self.goustBlue = GhostBlue(self.map.XSizeCell()*13.5,self.map.YSizeCell()*12.5, (0, 255, 255), self.map.YSizeCell())
+        self.goustOrange = GhostOrange(self.map.XSizeCell()*13.5,self.map.YSizeCell()*13.5, (255, 165, 0), self.map.YSizeCell())
 
-    def Start(self,screen,game_end_callback, game_update_callback, eat):
+    def Start(self,screen,game_end_callback, game_update_callback, eat, data):
         
         font = pygame.font.SysFont("Verdana", 15)
         fontForVictory = pygame.font.SysFont("Verdana", 40)
@@ -65,13 +65,14 @@ class Game:
                 self.pacMan.RunAI(self.goustRed,self.goustPink,self.goustBlue,self.goustOrange, self.map,eat)
 
                 self.pacMan.IsAlive(self.goustRed,self.goustPink,self.goustBlue,self.goustOrange,self.map)
-                self.goustRed.Action(self.pacMan, self.map)
-                if(self.map.score>=30):
-                    self.goustPink.Action(self.pacMan, self.map)
-                if(self.map.score>=60):
-                    self.goustBlue.Action(self.pacMan, self.goustRed, self.map)
-                if(self.map.score>=180):
-                    self.goustOrange.Action(self.pacMan, self.map)
+                if(data['EnableGhost']):
+                    self.goustRed.Action(self.pacMan, self.map)
+                    if(self.map.score>=30):
+                        self.goustPink.Action(self.pacMan, self.map)
+                    if(self.map.score>=60):
+                        self.goustBlue.Action(self.pacMan, self.goustRed, self.map)
+                    if(self.map.score>=180):
+                        self.goustOrange.Action(self.pacMan, self.map)
                 self.pacMan.IsAlive(self.goustRed,self.goustPink,self.goustBlue,self.goustOrange,self.map)
                 
                 

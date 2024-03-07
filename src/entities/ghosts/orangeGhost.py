@@ -1,6 +1,6 @@
-import ghost
+from entities.ghosts.ghost import Ghost
 
-class GhostOrange(ghost.Ghost):
+class GhostOrange(Ghost):
     def Scatter(self, map):
         self.GoTo(0, 25*map.YSizeCell(), map)
     
